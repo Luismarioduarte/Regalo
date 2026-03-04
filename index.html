@@ -21,9 +21,7 @@
             min-height: 100vh;
         }
 
-        .cursive {
-            font-family: 'Dancing Script', cursive;
-        }
+        .cursive { font-family: 'Dancing Script', cursive; }
 
         .card {
             background: rgba(255, 255, 255, 0.95);
@@ -65,29 +63,22 @@
             transition: transform 0.3s;
         }
 
-        .gift-box:hover {
-            transform: scale(1.1) rotate(5deg);
-        }
+        .gift-box:hover { transform: scale(1.1) rotate(5deg); }
 
-        .hidden-section {
-            display: none;
-        }
+        .hidden-section { display: none; }
         
-        .highlight-love {
-            color: #be185d;
-            font-weight: 700;
-        }
+        .highlight-love { color: #be185d; font-weight: 700; }
 
         #wait-msg {
             color: #be185d;
             font-weight: 600;
             margin-top: 1rem;
+            font-size: 1.1rem;
         }
     </style>
 </head>
 <body>
 
-    <!-- Pantalla Principal -->
     <div id="main-card" class="card animate__animated animate__fadeIn">
         <h1 class="text-4xl cursive text-pink-600 mb-6 animate__animated animate__pulse animate__infinite">
             ¡Feliz Cumpleaños, Mileidys!
@@ -110,13 +101,12 @@
 
         <div id="gift-intro" class="mt-8 hidden">
             <hr class="mb-6 border-pink-100">
-            <p class="text-sm text-gray-500 mb-2 uppercase tracking-widest font-semibold">Toca el regalo para tu sorpresa</p>
+            <p id="instruction-text" class="text-sm text-gray-500 mb-2 uppercase tracking-widest font-semibold">Toca el regalo para tu sorpresa</p>
             <div onclick="verificarRegalo()" class="gift-box animate__animated animate__bounceIn">🎁</div>
             <div id="wait-msg" class="hidden animate__animated animate__fadeIn"></div>
         </div>
     </div>
 
-    <!-- Pantalla de la Dinámica María Claudia -->
     <div id="challenge-card" class="card hidden-section animate__animated animate__zoomIn">
         <h2 class="text-3xl cursive text-pink-600 mb-4">¡Reto en María Claudia! 🛍️</h2>
         <p class="text-gray-600 mb-6">
@@ -139,9 +129,10 @@
     </div>
 
     <script>
-        const DOCE_HORAS_MS = 12 * 60 * 60 * 1000;
+        // CONFIGURACIÓN: 3 HORAS
+        const TIEMPO_ESPERA_MS = 3 * 60 * 60 * 1000; 
 
-        // Secuencia de mensajes
+        // Secuencia de mensajes iniciales
         setTimeout(() => document.getElementById('p1').classList.add('active'), 1000);
         setTimeout(() => document.getElementById('p2').classList.add('active'), 3500);
         setTimeout(() => document.getElementById('p3').classList.add('active'), 5500);
@@ -155,49 +146,55 @@
             const ahora = Date.now();
 
             if (!horaGuardada) {
-                // Primera vez que lo toca, guardamos la hora
+                // PRIMER TOQUE: Inicia la cuenta de 3 horas
                 localStorage.setItem('mileidys_regalo_hora', ahora);
-                mostrarEspera(DOCE_HORAS_MS);
+                iniciarContadorEspera(TIEMPO_ESPERA_MS);
             } else {
                 const tiempoTranscurrido = ahora - parseInt(horaGuardada);
-                if (tiempoTranscurrido >= DOCE_HORAS_MS) {
+                if (tiempoTranscurrido >= TIEMPO_ESPERA_MS) {
+                    // TIEMPO CUMPLIDO: Se abre el regalo
                     abrirRegalo();
                 } else {
-                    mostrarEspera(DOCE_HORAS_MS - tiempoTranscurrido);
+                    // SIGUE ESPERANDO: Muestra cuánto falta
+                    iniciarContadorEspera(TIEMPO_ESPERA_MS - tiempoTranscurrido);
                 }
             }
         }
 
-        function mostrarEspera(faltanteMs) {
+        function iniciarContadorEspera(faltanteInicial) {
             const msgElement = document.getElementById('wait-msg');
+            const instruction = document.getElementById('instruction-text');
             msgElement.classList.remove('hidden');
+            instruction.innerText = "La sorpresa se está preparando...";
             
-            const actualizarContador = () => {
+            const actualizar = () => {
                 const ahora = Date.now();
-                const horaGuardada = parseInt(localStorage.getItem('mileidys_regalo_hora'));
-                const actualFaltante = DOCE_HORAS_MS - (ahora - horaGuardada);
+                const horaInicio = parseInt(localStorage.getItem('mileidys_regalo_hora'));
+                const tiempoRestante = TIEMPO_ESPERA_MS - (ahora - horaInicio);
 
-                if (actualFaltante <= 0) {
-                    msgElement.innerHTML = "¡El regalo ya está listo! Toca de nuevo.";
-                    return;
+                if (tiempoRestante <= 0) {
+                    msgElement.innerHTML = "¡LA SORPRESA ESTÁ LISTA!<br>Toca el regalo ahora.";
+                    msgElement.classList.add('text-green-600');
+                    document.querySelector('.gift-box').classList.add('animate__tada', 'animate__infinite');
+                    return true; // Terminar
                 }
 
-                const horas = Math.floor(actualFaltante / (1000 * 60 * 60));
-                const minutos = Math.floor((actualFaltante % (1000 * 60 * 60)) / (1000 * 60));
-                const segundos = Math.floor((actualFaltante % (1000 * 60)) / 1000);
+                const h = Math.floor(tiempoRestante / (1000 * 60 * 60));
+                const m = Math.floor((tiempoRestante % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((tiempoRestante % (1000 * 60)) / 1000);
                 
-                msgElement.innerHTML = `¡Sorpresa activada!<br>Vuelve en: ${horas}h ${minutos}m ${segundos}s para el reto.`;
+                msgElement.innerHTML = `Vuelve en:<br><span class="text-2xl font-bold">${h}h ${m}m ${s}s</span><br>para descubrir tu regalo.`;
+                return false;
             };
 
-            actualizarContador();
-            const interval = setInterval(() => {
-                actualizarContador();
-                if (DOCE_HORAS_MS - (Date.now() - parseInt(localStorage.getItem('mileidys_regalo_hora'))) <= 0) {
-                    clearInterval(interval);
-                }
-            }, 1000);
+            const finalizado = actualizar();
+            if (!finalizado) {
+                const interval = setInterval(() => {
+                    if (actualizar()) clearInterval(interval);
+                }, 1000);
+            }
             
-            // Efecto visual de rebote en el regalo
+            // Efecto de movimiento
             document.querySelector('.gift-box').classList.add('animate__shakeX');
             setTimeout(() => document.querySelector('.gift-box').classList.remove('animate__shakeX'), 500);
         }
@@ -225,7 +222,7 @@
             btn.classList.add('opacity-50', 'cursor-not-allowed');
             btn.innerText = "¡CORRE POR LA TIENDA!";
 
-            let timeLeft = 60; // Actualizado a 60 segundos
+            let timeLeft = 60; 
             const timerDisplay = document.getElementById('timer');
             
             const countdown = setInterval(() => {
@@ -249,26 +246,10 @@
         function lanzarFinal() {
             var end = Date.now() + (6 * 1000);
             var colors = ['#ec4899', '#f472b6', '#ffffff'];
-
             (function frame() {
-              confetti({
-                particleCount: 3,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 },
-                colors: colors
-              });
-              confetti({
-                particleCount: 3,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 },
-                colors: colors
-              });
-
-              if (Date.now() < end) {
-                requestAnimationFrame(frame);
-              }
+              confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: colors });
+              confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: colors });
+              if (Date.now() < end) requestAnimationFrame(frame);
             }());
         }
     </script>
