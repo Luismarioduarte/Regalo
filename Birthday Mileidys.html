@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Feliz Cumpleaños Mileidys! - De Daniel Balí</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Poppins:wght@300;400;600&display=swap');
+
+        body {
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .cursive {
+            font-family: 'Dancing Script', cursive;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+            padding: 2.5rem;
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            border: 2px solid #fbcfe8;
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease-out;
+            display: none;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+            display: block;
+        }
+
+        .timer-display {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 4rem;
+            font-weight: bold;
+            color: #db2777;
+        }
+
+        .gift-box {
+            font-size: 80px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .gift-box:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .hidden-section {
+            display: none;
+        }
+        
+        .highlight-love {
+            color: #be185d;
+            font-weight: 700;
+        }
+
+        #wait-msg {
+            color: #be185d;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Pantalla Principal -->
+    <div id="main-card" class="card animate__animated animate__fadeIn">
+        <h1 class="text-4xl cursive text-pink-600 mb-6 animate__animated animate__pulse animate__infinite">
+            ¡Feliz Cumpleaños, Mileidys!
+        </h1>
+        
+        <div class="space-y-5 text-gray-700 text-left">
+            <p class="reveal text-lg" id="p1">
+                En este día especial le pido al Señor que te siga guardando, bendiciéndote, amándote mucho más como lo ha venido haciendo.
+            </p>
+            <p class="reveal text-lg" id="p2">
+                De mi parte decirte que <span class="highlight-love">te amo, te amo, te amo.</span>
+            </p>
+            <p class="reveal text-lg" id="p3">
+                En mi vida eres mi niña preciosa; <span class="highlight-love">te amo.</span>
+            </p>
+            <p class="reveal font-bold text-pink-500 text-right mt-4" id="p4">
+                Atte: Daniel Balí
+            </p>
+        </div>
+
+        <div id="gift-intro" class="mt-8 hidden">
+            <hr class="mb-6 border-pink-100">
+            <p class="text-sm text-gray-500 mb-2 uppercase tracking-widest font-semibold">Toca el regalo para tu sorpresa</p>
+            <div onclick="verificarRegalo()" class="gift-box animate__animated animate__bounceIn">🎁</div>
+            <div id="wait-msg" class="hidden animate__animated animate__fadeIn"></div>
+        </div>
+    </div>
+
+    <!-- Pantalla de la Dinámica María Claudia -->
+    <div id="challenge-card" class="card hidden-section animate__animated animate__zoomIn">
+        <h2 class="text-3xl cursive text-pink-600 mb-4">¡Reto en María Claudia! 🛍️</h2>
+        <p class="text-gray-600 mb-6">
+            Mileidys, tienes exactamente <span class="font-bold text-pink-500">60 segundos</span> en la tienda para elegir lo que tú quieras. ¡Lo que logres coger es tuyo!
+        </p>
+        
+        <div id="timer-container" class="mb-8">
+            <div id="timer" class="timer-display">60</div>
+            <p class="text-xs text-gray-400 mt-2 uppercase">¡Aprovecha cada segundo!</p>
+        </div>
+
+        <button id="start-btn" onclick="iniciarReto()" class="bg-pink-500 hover:bg-pink-600 text-white font-bold py-4 px-10 rounded-full shadow-lg transition-all transform active:scale-95 w-full text-xl">
+            ¡INICIAR TIEMPO!
+        </button>
+
+        <div id="finish-msg" class="hidden mt-6 text-2xl font-bold text-green-600 animate__animated animate__bounceIn">
+            ¡TIEMPO AGOTADO! ✨<br>
+            <span class="text-sm text-gray-500 font-normal">¡Disfruta tus regalos, mi niña preciosa!</span>
+        </div>
+    </div>
+
+    <script>
+        const DOCE_HORAS_MS = 12 * 60 * 60 * 1000;
+
+        // Secuencia de mensajes
+        setTimeout(() => document.getElementById('p1').classList.add('active'), 1000);
+        setTimeout(() => document.getElementById('p2').classList.add('active'), 3500);
+        setTimeout(() => document.getElementById('p3').classList.add('active'), 5500);
+        setTimeout(() => {
+            document.getElementById('p4').classList.add('active');
+            document.getElementById('gift-intro').classList.remove('hidden');
+        }, 7500);
+
+        function verificarRegalo() {
+            const horaGuardada = localStorage.getItem('mileidys_regalo_hora');
+            const ahora = Date.now();
+
+            if (!horaGuardada) {
+                // Primera vez que lo toca, guardamos la hora
+                localStorage.setItem('mileidys_regalo_hora', ahora);
+                mostrarEspera(DOCE_HORAS_MS);
+            } else {
+                const tiempoTranscurrido = ahora - parseInt(horaGuardada);
+                if (tiempoTranscurrido >= DOCE_HORAS_MS) {
+                    abrirRegalo();
+                } else {
+                    mostrarEspera(DOCE_HORAS_MS - tiempoTranscurrido);
+                }
+            }
+        }
+
+        function mostrarEspera(faltanteMs) {
+            const msgElement = document.getElementById('wait-msg');
+            msgElement.classList.remove('hidden');
+            
+            const actualizarContador = () => {
+                const ahora = Date.now();
+                const horaGuardada = parseInt(localStorage.getItem('mileidys_regalo_hora'));
+                const actualFaltante = DOCE_HORAS_MS - (ahora - horaGuardada);
+
+                if (actualFaltante <= 0) {
+                    msgElement.innerHTML = "¡El regalo ya está listo! Toca de nuevo.";
+                    return;
+                }
+
+                const horas = Math.floor(actualFaltante / (1000 * 60 * 60));
+                const minutos = Math.floor((actualFaltante % (1000 * 60 * 60)) / (1000 * 60));
+                const segundos = Math.floor((actualFaltante % (1000 * 60)) / 1000);
+                
+                msgElement.innerHTML = `¡Sorpresa activada!<br>Vuelve en: ${horas}h ${minutos}m ${segundos}s para el reto.`;
+            };
+
+            actualizarContador();
+            const interval = setInterval(() => {
+                actualizarContador();
+                if (DOCE_HORAS_MS - (Date.now() - parseInt(localStorage.getItem('mileidys_regalo_hora'))) <= 0) {
+                    clearInterval(interval);
+                }
+            }, 1000);
+            
+            // Efecto visual de rebote en el regalo
+            document.querySelector('.gift-box').classList.add('animate__shakeX');
+            setTimeout(() => document.querySelector('.gift-box').classList.remove('animate__shakeX'), 500);
+        }
+
+        function abrirRegalo() {
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#ec4899', '#ffffff', '#fbcfe8']
+            });
+
+            setTimeout(() => {
+                document.getElementById('main-card').classList.add('animate__animated', 'animate__fadeOut');
+                setTimeout(() => {
+                    document.getElementById('main-card').classList.add('hidden-section');
+                    document.getElementById('challenge-card').classList.remove('hidden-section');
+                }, 500);
+            }, 800);
+        }
+
+        function iniciarReto() {
+            const btn = document.getElementById('start-btn');
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            btn.innerText = "¡CORRE POR LA TIENDA!";
+
+            let timeLeft = 60; // Actualizado a 60 segundos
+            const timerDisplay = document.getElementById('timer');
+            
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timerDisplay.innerText = timeLeft;
+
+                if (timeLeft <= 10) {
+                    timerDisplay.style.color = "#ef4444";
+                    timerDisplay.classList.add('animate__animated', 'animate__pulse');
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    timerDisplay.innerText = "0";
+                    document.getElementById('finish-msg').classList.remove('hidden');
+                    lanzarFinal();
+                }
+            }, 1000);
+        }
+
+        function lanzarFinal() {
+            var end = Date.now() + (6 * 1000);
+            var colors = ['#ec4899', '#f472b6', '#ffffff'];
+
+            (function frame() {
+              confetti({
+                particleCount: 3,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: colors
+              });
+              confetti({
+                particleCount: 3,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: colors
+              });
+
+              if (Date.now() < end) {
+                requestAnimationFrame(frame);
+              }
+            }());
+        }
+    </script>
+</body>
+</html>
